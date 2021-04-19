@@ -4,7 +4,7 @@ function removeRunnerArgs(args) {
 
 function getCommandIdx(args, command) {
   const lowerCasedCommand = command.toLowerCase();
-  return args.map(arg => arg.toLowerCase()).indexOf(lowerCasedCommand);
+  return args.map((arg) => arg.toLowerCase()).indexOf(lowerCasedCommand);
 }
 
 function isCommandExist(args, command) {
@@ -12,12 +12,12 @@ function isCommandExist(args, command) {
 }
 
 function hasWatchCommand(args) {
-  return isCommandExist(args, '-w') || isCommandExist(args, '--watch');
+  return isCommandExist(args, "-w") || isCommandExist(args, "--watch");
 }
 
 function forceWatch(args) {
   if (!hasWatchCommand(args)) {
-    args.push('--watch');
+    args.push("--watch");
   }
 
   return args;
@@ -45,15 +45,21 @@ function extractCommand(args, command) {
 function extractArgs(args) {
   const allArgs = forceWatch(removeRunnerArgs(args));
 
-  const onFirstSuccessCommand = extractCommandWithValue(allArgs, '--onFirstSuccess');
-  const onSuccessCommand = extractCommandWithValue(allArgs, '--onSuccess');
-  const onFailureCommand = extractCommandWithValue(allArgs, '--onFailure');
-  const onCompilationComplete = extractCommandWithValue(allArgs, '--onCompilationComplete');
-  const noColors = extractCommand(allArgs, '--noColors');
-  const noClear = extractCommand(allArgs, '--noClear');
-  let compiler = extractCommandWithValue(allArgs, '--compiler');
+  const onFirstSuccessCommand = extractCommandWithValue(
+    allArgs,
+    "--onFirstSuccess"
+  );
+  const onSuccessCommand = extractCommandWithValue(allArgs, "--onSuccess");
+  const onFailureCommand = extractCommandWithValue(allArgs, "--onFailure");
+  const onCompilationComplete = extractCommandWithValue(
+    allArgs,
+    "--onCompilationComplete"
+  );
+  const noColors = extractCommand(allArgs, "--noColors");
+  const noClear = extractCommand(allArgs, "--noClear");
+  let compiler = extractCommandWithValue(allArgs, "--compiler");
   if (!compiler) {
-    compiler = 'typescript/bin/tsc';
+    compiler = "typescript/bin/tsc";
   }
 
   return {

@@ -5,7 +5,12 @@ const nodeCleanup = require("node-cleanup");
 const spawn = require("cross-spawn");
 const run = require("./runner.js");
 const { extractArgs } = require("./args-manager.js");
-const { manipulate, detectState, deleteClear, print } = require("./stdout-manipulator.js");
+const {
+  manipulate,
+  detectState,
+  deleteClear,
+  print,
+} = require("./stdout-manipulator.js");
 const readline = require("readline");
 
 let firstTime = true;
@@ -63,7 +68,8 @@ rl.on("line", function (input) {
   const compilationError = state.compilationError;
   const compilationComplete = state.compilationComplete;
 
-  compilationErrorSinceStart = (!newCompilation && compilationErrorSinceStart) || compilationError;
+  compilationErrorSinceStart =
+    (!newCompilation && compilationErrorSinceStart) || compilationError;
 
   if (compilationComplete) {
     killProcesses(false).then(() => {
@@ -97,7 +103,10 @@ rl.on("line", function (input) {
 });
 
 const Signal = {
-  send: typeof process.send === "function" ? (...e) => process.send(...e) : () => {},
+  send:
+    typeof process.send === "function"
+      ? (...e) => process.send(...e)
+      : () => {},
   emitFirstSuccess: () => Signal.send("first_success"),
   emitSuccess: () => Signal.send("success"),
   emitFail: () => Signal.send("compile_errors"),

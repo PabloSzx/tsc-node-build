@@ -1,10 +1,12 @@
-const { fork } = require('child_process');
-const EventEmitter = require('events');
+const { fork } = require("child_process");
+const EventEmitter = require("events");
 
 class TscWatchClient extends EventEmitter {
   start(...args) {
-    this.tsc = fork(require.resolve('./tsc-watch.js'), args, { stdio: 'inherit' });
-    this.tsc.on('message', msg => this.emit(msg));
+    this.tsc = fork(require.resolve("./tsc-watch.js"), args, {
+      stdio: "inherit",
+    });
+    this.tsc.on("message", (msg) => this.emit(msg));
   }
 
   kill() {

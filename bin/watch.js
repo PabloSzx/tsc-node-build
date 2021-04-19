@@ -6,7 +6,10 @@ const { watch } = require("../src/main.js");
 program
   .allowUnknownOption()
   .version(require("../package.json").version)
-  .option("-p, --project <path>", "path of tsconfig.json or directory containing tsconfig.json")
+  .option(
+    "-p, --project <path>",
+    "path of tsconfig.json or directory containing tsconfig.json"
+  )
   .option("--onSuccess <script>")
   .action((options) => {
     watch({

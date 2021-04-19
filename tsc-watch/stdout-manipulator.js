@@ -1,4 +1,4 @@
-const stripAnsi = require('strip-ansi');
+const stripAnsi = require("strip-ansi");
 
 const tscUsageSyntaxRegex = / -w, --watch.*Watch input files\./;
 const typescriptPrettyErrorRegex = /:\d+:\d+ \- error TS\d+: /;
@@ -10,32 +10,41 @@ const compilationCompleteRegex = /( Compilation complete\. Watching for file cha
 const newCompilationRegex = /( Starting compilation in watch mode\.\.\.| File change detected\. Starting incremental compilation\.\.\.)/;
 
 const newAdditionToSyntax = [
-  ' -w, --watch                                        Watch input files. [always on]',
-  ' --onSuccess COMMAND                                Executes `COMMAND` on **every successful** compilation.',
-  ' --onFirstSuccess COMMAND                           Executes `COMMAND` on the **first successful** compilation.',
-  ' --onFailure COMMAND                                Executes `COMMAND` on **every failed** compilation.',
-  ' --onCompilationComplete COMMAND                    Executes `COMMAND` on **every successful or failed** compilation.',
-  ' --noColors                                         Removes the red/green colors from the compiler output',
-  ' --noClear                                          Prevents the compiler from clearing the screen',
-  ' --compiler PATH                                    The PATH will be used instead of typescript compiler. Defaults typescript/bin/tsc.',
-].join('\n');
+  " -w, --watch                                        Watch input files. [always on]",
+  " --onSuccess COMMAND                                Executes `COMMAND` on **every successful** compilation.",
+  " --onFirstSuccess COMMAND                           Executes `COMMAND` on the **first successful** compilation.",
+  " --onFailure COMMAND                                Executes `COMMAND` on **every failed** compilation.",
+  " --onCompilationComplete COMMAND                    Executes `COMMAND` on **every successful or failed** compilation.",
+  " --noColors                                         Removes the red/green colors from the compiler output",
+  " --noClear                                          Prevents the compiler from clearing the screen",
+  " --compiler PATH                                    The PATH will be used instead of typescript compiler. Defaults typescript/bin/tsc.",
+].join("\n");
 
 function color(line, noClear) {
   // coloring errors:
-  line = line.replace(typescriptErrorRegex, m => `\u001B[36m${m}\u001B[39m`); // Cyan
-  line = line.replace(typescriptPrettyErrorRegex, m => `\u001B[36m${m}\u001B[39m`); // Cyan
+  line = line.replace(typescriptErrorRegex, (m) => `\u001B[36m${m}\u001B[39m`); // Cyan
+  line = line.replace(
+    typescriptPrettyErrorRegex,
+    (m) => `\u001B[36m${m}\u001B[39m`
+  ); // Cyan
 
   // completed with error:
-  line = line.replace(compilationCompleteWithErrorRegex, m => `\u001B[31m${m}\u001B[39m`); // Red
+  line = line.replace(
+    compilationCompleteWithErrorRegex,
+    (m) => `\u001B[31m${m}\u001B[39m`
+  ); // Red
 
   // completed without error:
-  line = line.replace(compilationCompleteWithoutErrorRegex, m => `\u001B[32m${m}\u001B[39m`); // Green
+  line = line.replace(
+    compilationCompleteWithoutErrorRegex,
+    (m) => `\u001B[32m${m}\u001B[39m`
+  ); // Green
 
   // usage
-  line = line.replace(tscUsageSyntaxRegex, m => `\u001B[33m${m}\u001B[39m`); // Yellow
+  line = line.replace(tscUsageSyntaxRegex, (m) => `\u001B[33m${m}\u001B[39m`); // Yellow
 
   if (noClear && newCompilationRegex.test(line)) {
-    return '\n\n----------------------\n' + line;
+    return "\n\n----------------------\n" + line;
   }
 
   return line;

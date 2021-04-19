@@ -16,7 +16,9 @@ const killPromise = (pid) => new Promise((resolve) => kill(pid, resolve));
  * @type {(path: string) => Promise<void>}
  */
 const rimrafPromise = (path) =>
-  new Promise((resolve, reject) => rimraf(path, {}, (err) => (err ? reject(err) : resolve())));
+  new Promise((resolve, reject) =>
+    rimraf(path, {}, (err) => (err ? reject(err) : resolve()))
+  );
 
 function resolvePath(
   /**
@@ -54,15 +56,21 @@ exports.build = async function build(
 
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
-  const cjs = concurrently([tscProject + ` --outDir ${distPath}/cjs -m commonjs`, ...args]);
-  const esm = concurrently([tscProject + ` --outDir ${distPath}/esm -m es2020`, ...args], {
-    //@ts-ignore
-    outputStream: {
-      write() {
-        return true;
+  const cjs = concurrently([
+    tscProject + ` --outDir ${distPath}/cjs -m commonjs`,
+    ...args,
+  ]);
+  const esm = concurrently(
+    [tscProject + ` --outDir ${distPath}/esm -m es2020`, ...args],
+    {
+      //@ts-ignore
+      outputStream: {
+        write() {
+          return true;
+        },
       },
-    },
-  });
+    }
+  );
 
   await Promise.all([cjs, esm, writeModuleType()]);
 
@@ -95,11 +103,17 @@ async function writeModuleType(
       );
     } else {
       await mkdirp(distPath + "/esm");
-      await promises.writeFile(distPath + "/esm/package.json", JSON.stringify({ type: "module" }));
+      await promises.writeFile(
+        distPath + "/esm/package.json",
+        JSON.stringify({ type: "module" })
+      );
     }
   } catch (err) {
     await mkdirp(distPath + "/esm");
-    await promises.writeFile(distPath + "/esm/package.json", JSON.stringify({ type: "module" }));
+    await promises.writeFile(
+      distPath + "/esm/package.json",
+      JSON.stringify({ type: "module" })
+    );
   }
 }
 
@@ -117,18 +131,34 @@ exports.watch = async function watch(
 
   const tscWatchJs = require.resolve("../tsc-watch/tsc-watch.js");
 
-  const project = options.project ? ["--noClear", "-p", options.project] : ["--noClear"];
+  const project = options.project
+    ? ["--noClear", "-p", options.project]
+    : ["--noClear"];
 
   const watcher = fork(
     tscWatchJs,
-    [...project, "--outDir", distPath + "/cjs", "-m", "commonjs", ...(options.args || [])],
+    [
+      ...project,
+      "--outDir",
+      distPath + "/cjs",
+      "-m",
+      "commonjs",
+      ...(options.args || []),
+    ],
     {
       stdio: "inherit",
     }
   );
   const watcherEsm = fork(
     tscWatchJs,
-    [...project, "--outDir", distPath + "/esm", "-m", "es2020", ...(options.args || [])],
+    [
+      ...project,
+      "--outDir",
+      distPath + "/esm",
+      "-m",
+      "es2020",
+      ...(options.args || []),
+    ],
     {
       stdio: "ignore",
     }
