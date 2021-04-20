@@ -42,7 +42,7 @@ function resolvePath(
 
 exports.build = async function build(
   /**
-   * @type {string}
+   * @type {string | undefined}
    */
   project,
   /**

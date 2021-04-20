@@ -1,4 +1,4 @@
-export function build(project: string): Promise<void>;
+export function build(project?: string, args?:string[]): Promise<void>;
 export function watch(options?: {
     project?: string;
     onSuccess?: string;
