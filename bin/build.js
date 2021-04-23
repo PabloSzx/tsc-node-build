@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { program, option } = require("commander");
+const { program } = require("commander");
 const { build } = require("../src/main.js");
 
 program
@@ -12,7 +12,7 @@ program
   )
   .option("--clean", "Clean dist folder before building", true)
   .action((options) => {
-    build(options.project, program.args).catch(() => {
+    build(options).catch(() => {
       process.exit(1);
     });
   });

@@ -13,11 +13,7 @@ program
   .option("--clean", "Clean dist folder before building", true)
   .option("--onSuccess <script>")
   .action((options) => {
-    watch({
-      project: options.project,
-      onSuccess: options.onSuccess,
-      args: program.args,
-    }).catch((err) => {
+    watch(options).catch((err) => {
       console.error(err);
       process.exit(1);
     });
