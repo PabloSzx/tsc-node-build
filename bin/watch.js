@@ -9,8 +9,8 @@ program
   .option(
     "-p, --project <path>",
     "path of tsconfig.json or directory containing tsconfig.json"
-  );
-option("--clean", "Clean dist folder before building", true)
+  )
+  .option("--clean", "Clean dist folder before building", true)
   .option("--onSuccess <script>")
   .action((options) => {
     watch({
