@@ -42,17 +42,15 @@ function resolvePath(
 
 exports.build = async function build(
   /**
-   * @type {string | undefined}
+   * @type { {project?:string; args?:string[]; clean?:boolean } | undefined }
    */
-  project,
-  /**
-   * @type {string[] | undefined}
-   */
-  args = []
+  options = {}
 ) {
+  const { project, args = [], clean } = options;
   const timeStart = Date.now();
   const distPath = resolvePath(project, "dist");
-  await rimrafPromise(distPath);
+
+  if (clean) await rimrafPromise(distPath);
 
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
@@ -119,13 +117,13 @@ async function writeModuleType(
 
 exports.watch = async function watch(
   /**
-   * @type {{project?: string;onSuccess?: string;args?:string[]}}
+   * @type {{project?: string; onSuccess?: string; args?:string[]; clean?:boolean }}
    */
   options = {}
 ) {
   const distPath = resolvePath(options.project, "dist");
 
-  await rimrafPromise(distPath);
+  if (options.clean) await rimrafPromise(distPath);
 
   await writeModuleType(options.project);
 

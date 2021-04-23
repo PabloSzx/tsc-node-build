@@ -1,6 +1,6 @@
 # tsc-node-build
 
-Build __TypeScript Node.js__ libraries with ESM support using `tsc`.
+Build **TypeScript Node.js** libraries with ESM support using `tsc`.
 
 ## Features
 
