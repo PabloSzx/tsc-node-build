@@ -58,10 +58,17 @@ exports.build = async function build(
 
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
-  const cjs = concurrently([
-    tscProject + ` --outDir ${outputPath}/cjs -m commonjs`,
-    ...args,
-  ]);
+  const cjs = concurrently(
+    [tscProject + ` --outDir ${outputPath}/cjs -m commonjs`, ...args],
+    {
+      //@ts-ignore
+      outputStream: {
+        write() {
+          return true;
+        },
+      },
+    }
+  );
   const esm = concurrently(
     [tscProject + ` --outDir ${outputPath}/esm -m es2020`, ...args],
     {
@@ -73,8 +80,13 @@ exports.build = async function build(
       },
     }
   );
+  const types = concurrently([
+    tscProject +
+      ` --outDir ${outputPath}/types --declaration --emitDeclarationOnly -m es2020`,
+    ...args,
+  ]);
 
-  await Promise.all([cjs, esm, writeModuleType()]);
+  await Promise.all([cjs, esm, types, writeModuleType()]);
 
   console.log("Done in " + (Date.now() - timeStart + "ms"));
 };
@@ -150,7 +162,7 @@ exports.watch = async function watch(
       ...(options.args || []),
     ],
     {
-      stdio: "inherit",
+      stdio: "ignore",
     }
   );
   const watcherEsm = fork(
@@ -167,6 +179,22 @@ exports.watch = async function watch(
       stdio: "ignore",
     }
   );
+  const watcherTypes = fork(
+    tscWatchJs,
+    [
+      ...project,
+      "--outDir",
+      outputPath + "/types",
+      "--declaration",
+      "--emitDeclarationOnly",
+      "-m",
+      "es2020",
+      ...(options.args || []),
+    ],
+    {
+      stdio: "inherit",
+    }
+  );
 
   /**
    * @type {number}
@@ -175,6 +203,7 @@ exports.watch = async function watch(
 
   let cjsReady = false;
   let esmReady = false;
+  let typesReady = false;
 
   async function startProcess() {
     if (prevProcess) await killPromise(prevProcess);
@@ -185,6 +214,20 @@ exports.watch = async function watch(
     }
   }
 
+  watcherTypes.on("message", async (message) => {
+    switch (message) {
+      case "new_compilation": {
+        typesReady = false;
+        break;
+      }
+      case "success": {
+        typesReady = true;
+        if (esmReady && cjsReady) startProcess();
+        break;
+      }
+    }
+  });
+
   watcherEsm.on("message", async (message) => {
     switch (message) {
       case "new_compilation": {
@@ -193,7 +236,7 @@ exports.watch = async function watch(
       }
       case "success": {
         esmReady = true;
-        if (cjsReady) startProcess();
+        if (cjsReady && typesReady) startProcess();
         break;
       }
     }
@@ -207,7 +250,7 @@ exports.watch = async function watch(
       }
       case "success": {
         cjsReady = true;
-        if (esmReady) startProcess();
+        if (esmReady && typesReady) startProcess();
         break;
       }
     }
