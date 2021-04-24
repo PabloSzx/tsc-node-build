@@ -11,7 +11,7 @@ program
     "path of tsconfig.json or directory containing tsconfig.json"
   )
   .option("--clean", "Clean dist folder before building", false)
-  .option("--dir", "Specify output directory", "dist")
+  .option("--dir <directory>", "Specify output directory", "dist")
   .action((options) => {
     build(options).catch(() => {
       process.exit(1);
