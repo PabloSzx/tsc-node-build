@@ -12,6 +12,7 @@ program
   )
   .option("--clean", "Clean dist folder before building", false)
   .option("--onSuccess <script>")
+  .option("--dir", "Specify output directory", "dist")
   .action((options) => {
     watch(options).catch((err) => {
       console.error(err);

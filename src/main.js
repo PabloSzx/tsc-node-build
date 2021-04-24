@@ -20,6 +20,8 @@ const rimrafPromise = (path) =>
     rimraf(path, {}, (err) => (err ? reject(err) : resolve()))
   );
 
+let outputDirectory = "dist";
+
 function resolvePath(
   /**
    * @type {string | undefined}
@@ -42,24 +44,26 @@ function resolvePath(
 
 exports.build = async function build(
   /**
-   * @type { {project?:string; args?:string[]; clean?:boolean } | undefined }
+   * @type { {project?:string; args?:string[]; clean?:boolean; dir?:string; } | undefined }
    */
   options = {}
 ) {
+  outputDirectory = options.dir || "dist";
+
   const { project, args = [], clean } = options;
   const timeStart = Date.now();
-  const distPath = resolvePath(project, "dist");
+  const outputPath = resolvePath(project, outputDirectory);
 
-  if (clean) await rimrafPromise(distPath);
+  if (clean) await rimrafPromise(outputPath);
 
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
   const cjs = concurrently([
-    tscProject + ` --outDir ${distPath}/cjs -m commonjs`,
+    tscProject + ` --outDir ${outputPath}/cjs -m commonjs`,
     ...args,
   ]);
   const esm = concurrently(
-    [tscProject + ` --outDir ${distPath}/esm -m es2020`, ...args],
+    [tscProject + ` --outDir ${outputPath}/esm -m es2020`, ...args],
     {
       //@ts-ignore
       outputStream: {
@@ -81,7 +85,7 @@ async function writeModuleType(
    */
   project
 ) {
-  const distPath = resolvePath(project, "dist");
+  const outputPath = resolvePath(project, outputDirectory);
 
   try {
     const packageJsonString = await promises.readFile(
@@ -94,22 +98,22 @@ async function writeModuleType(
     const packageJson = JSON.parse(packageJsonString);
 
     if (packageJson.type === "module") {
-      await mkdirp(distPath + "/cjs");
+      await mkdirp(outputPath + "/cjs");
       await promises.writeFile(
-        distPath + "/cjs/package.json",
+        outputPath + "/cjs/package.json",
         JSON.stringify({ type: "commonjs" })
       );
     } else {
-      await mkdirp(distPath + "/esm");
+      await mkdirp(outputPath + "/esm");
       await promises.writeFile(
-        distPath + "/esm/package.json",
+        outputPath + "/esm/package.json",
         JSON.stringify({ type: "module" })
       );
     }
   } catch (err) {
-    await mkdirp(distPath + "/esm");
+    await mkdirp(outputPath + "/esm");
     await promises.writeFile(
-      distPath + "/esm/package.json",
+      outputPath + "/esm/package.json",
       JSON.stringify({ type: "module" })
     );
   }
@@ -117,13 +121,15 @@ async function writeModuleType(
 
 exports.watch = async function watch(
   /**
-   * @type {{project?: string; onSuccess?: string; args?:string[]; clean?:boolean }}
+   * @type {{project?: string; onSuccess?: string; args?:string[]; clean?:boolean; dir?:string }}
    */
   options = {}
 ) {
-  const distPath = resolvePath(options.project, "dist");
+  outputDirectory = options.dir || "dist";
 
-  if (options.clean) await rimrafPromise(distPath);
+  const outputPath = resolvePath(options.project, outputDirectory);
+
+  if (options.clean) await rimrafPromise(outputPath);
 
   await writeModuleType(options.project);
 
@@ -138,7 +144,7 @@ exports.watch = async function watch(
     [
       ...project,
       "--outDir",
-      distPath + "/cjs",
+      outputPath + "/cjs",
       "-m",
       "commonjs",
       ...(options.args || []),
@@ -152,7 +158,7 @@ exports.watch = async function watch(
     [
       ...project,
       "--outDir",
-      distPath + "/esm",
+      outputPath + "/esm",
       "-m",
       "es2020",
       ...(options.args || []),
