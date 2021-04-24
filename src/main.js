@@ -59,7 +59,10 @@ exports.build = async function build(
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
   const cjs = concurrently(
-    [tscProject + ` --outDir ${outputPath}/cjs -m commonjs`, ...args],
+    [
+      tscProject + ` --outDir ${outputPath}/cjs -m commonjs --removeComments`,
+      ...args,
+    ],
     {
       //@ts-ignore
       outputStream: {
@@ -70,7 +73,10 @@ exports.build = async function build(
     }
   );
   const esm = concurrently(
-    [tscProject + ` --outDir ${outputPath}/esm -m es2020`, ...args],
+    [
+      tscProject + ` --outDir ${outputPath}/esm -m es2020 --removeComments`,
+      ...args,
+    ],
     {
       //@ts-ignore
       outputStream: {
@@ -151,7 +157,7 @@ exports.watch = async function watch(
     ? ["--noClear", "-p", options.project]
     : ["--noClear"];
 
-  const watcher = fork(
+  const watcherCjs = fork(
     tscWatchJs,
     [
       ...project,
@@ -159,6 +165,7 @@ exports.watch = async function watch(
       outputPath + "/cjs",
       "-m",
       "commonjs",
+      "--removeComments",
       ...(options.args || []),
     ],
     {
@@ -173,6 +180,7 @@ exports.watch = async function watch(
       outputPath + "/esm",
       "-m",
       "es2020",
+      "--removeComments",
       ...(options.args || []),
     ],
     {
@@ -242,7 +250,7 @@ exports.watch = async function watch(
     }
   });
 
-  watcher.on("message", async (message) => {
+  watcherCjs.on("message", async (message) => {
     switch (message) {
       case "new_compilation": {
         cjsReady = false;
