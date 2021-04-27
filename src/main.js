@@ -92,7 +92,7 @@ exports.build = async function build(
     ...args,
   ]);
 
-  await Promise.all([cjs, esm, types, writeModuleType()]);
+  await Promise.all([cjs, esm, types, writeModuleType(options.project)]);
 
   console.log("Done in " + (Date.now() - timeStart + "ms"));
 };
