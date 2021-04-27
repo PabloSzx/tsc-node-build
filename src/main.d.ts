@@ -4,6 +4,7 @@ export function build(options?: {
   clean?: boolean;
   skipEsm?: boolean;
   skipCjs?: boolean;
+  silent?: boolean;
 }): Promise<void>;
 export function watch(options?: {
   project?: string;

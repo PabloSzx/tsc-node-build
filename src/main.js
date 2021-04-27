@@ -44,7 +44,7 @@ function resolvePath(
 
 exports.build = async function build(
   /**
-   * @type { {project?:string; args?:string[]; clean?:boolean; dir?:string; skipEsm?: boolean; skipCjs?: boolean; } | undefined }
+   * @type { {project?:string; args?:string[]; clean?:boolean; dir?:string; skipEsm?: boolean; skipCjs?: boolean; silent?: boolean } | undefined }
    */
   options = {}
 ) {
@@ -58,6 +58,15 @@ exports.build = async function build(
 
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
+  /**
+   * @type {any}
+   */
+  const outputStream = {
+    write() {
+      return true;
+    },
+  };
+
   const cjs = options.skipCjs
     ? null
     : concurrently(
@@ -68,12 +77,7 @@ exports.build = async function build(
             )}`,
         ],
         {
-          //@ts-ignore
-          outputStream: {
-            write() {
-              return true;
-            },
-          },
+          outputStream,
         }
       );
   const esm = options.skipEsm
@@ -86,12 +90,7 @@ exports.build = async function build(
             )}`,
         ],
         {
-          //@ts-ignore
-          outputStream: {
-            write() {
-              return true;
-            },
-          },
+          outputStream,
         }
       );
   const types = concurrently([
@@ -104,7 +103,9 @@ exports.build = async function build(
 
   await Promise.all([cjs, esm, types, writeModuleType(options.project)]);
 
-  console.log("Done in " + (Date.now() - timeStart + "ms"));
+  if (!options.silent) {
+    console.log("Done in " + (Date.now() - timeStart + "ms"));
+  }
 };
 
 async function writeModuleType(
