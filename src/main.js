@@ -44,7 +44,7 @@ function resolvePath(
 
 exports.build = async function build(
   /**
-   * @type { {project?:string; args?:string[]; clean?:boolean; dir?:string; } | undefined }
+   * @type { {project?:string; args?:string[]; clean?:boolean; dir?:string; skipEsm?: boolean; skipCjs?: boolean; } | undefined }
    */
   options = {}
 ) {
@@ -58,37 +58,47 @@ exports.build = async function build(
 
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
-  const cjs = concurrently(
-    [
-      tscProject + ` --outDir ${outputPath}/cjs -m commonjs --removeComments`,
-      ...args,
-    ],
-    {
-      //@ts-ignore
-      outputStream: {
-        write() {
-          return true;
-        },
-      },
-    }
-  );
-  const esm = concurrently(
-    [
-      tscProject + ` --outDir ${outputPath}/esm -m es2020 --removeComments`,
-      ...args,
-    ],
-    {
-      //@ts-ignore
-      outputStream: {
-        write() {
-          return true;
-        },
-      },
-    }
-  );
+  const cjs = options.skipCjs
+    ? null
+    : concurrently(
+        [
+          tscProject +
+            ` --outDir ${outputPath}/cjs -m commonjs --removeComments ${args.join(
+              " "
+            )}`,
+        ],
+        {
+          //@ts-ignore
+          outputStream: {
+            write() {
+              return true;
+            },
+          },
+        }
+      );
+  const esm = options.skipEsm
+    ? null
+    : concurrently(
+        [
+          tscProject +
+            ` --outDir ${outputPath}/esm -m es2020 --removeComments ${args.join(
+              " "
+            )}`,
+        ],
+        {
+          //@ts-ignore
+          outputStream: {
+            write() {
+              return true;
+            },
+          },
+        }
+      );
   const types = concurrently([
     tscProject +
-      ` --outDir ${outputPath}/types --declaration --emitDeclarationOnly -m es2020`,
+      ` --outDir ${outputPath}/types --declaration --emitDeclarationOnly -m es2020 ${args.join(
+        " "
+      )}`,
     ...args,
   ]);
 
@@ -139,7 +149,7 @@ async function writeModuleType(
 
 exports.watch = async function watch(
   /**
-   * @type {{project?: string; onSuccess?: string; args?:string[]; clean?:boolean; dir?:string }}
+   * @type {{project?: string; onSuccess?: string; args?:string[]; clean?:boolean; dir?:string; skipEsm?: boolean; skipCjs?: boolean; }}
    */
   options = {}
 ) {
@@ -157,36 +167,40 @@ exports.watch = async function watch(
     ? ["--noClear", "-p", options.project]
     : ["--noClear"];
 
-  const watcherCjs = fork(
-    tscWatchJs,
-    [
-      ...project,
-      "--outDir",
-      outputPath + "/cjs",
-      "-m",
-      "commonjs",
-      "--removeComments",
-      ...(options.args || []),
-    ],
-    {
-      stdio: "ignore",
-    }
-  );
-  const watcherEsm = fork(
-    tscWatchJs,
-    [
-      ...project,
-      "--outDir",
-      outputPath + "/esm",
-      "-m",
-      "es2020",
-      "--removeComments",
-      ...(options.args || []),
-    ],
-    {
-      stdio: "ignore",
-    }
-  );
+  const watcherCjs = options.skipCjs
+    ? null
+    : fork(
+        tscWatchJs,
+        [
+          ...project,
+          "--outDir",
+          outputPath + "/cjs",
+          "-m",
+          "commonjs",
+          "--removeComments",
+          ...(options.args || []),
+        ],
+        {
+          stdio: "ignore",
+        }
+      );
+  const watcherEsm = options.skipEsm
+    ? null
+    : fork(
+        tscWatchJs,
+        [
+          ...project,
+          "--outDir",
+          outputPath + "/esm",
+          "-m",
+          "es2020",
+          "--removeComments",
+          ...(options.args || []),
+        ],
+        {
+          stdio: "ignore",
+        }
+      );
   const watcherTypes = fork(
     tscWatchJs,
     [
@@ -209,8 +223,8 @@ exports.watch = async function watch(
    */
   let prevProcess;
 
-  let cjsReady = false;
-  let esmReady = false;
+  let cjsReady = !!options.skipCjs;
+  let esmReady = !!options.skipEsm;
   let typesReady = false;
 
   async function startProcess() {
@@ -236,31 +250,33 @@ exports.watch = async function watch(
     }
   });
 
-  watcherEsm.on("message", async (message) => {
-    switch (message) {
-      case "new_compilation": {
-        esmReady = false;
-        break;
+  watcherEsm &&
+    watcherEsm.on("message", async (message) => {
+      switch (message) {
+        case "new_compilation": {
+          esmReady = false;
+          break;
+        }
+        case "success": {
+          esmReady = true;
+          if (cjsReady && typesReady) startProcess();
+          break;
+        }
       }
-      case "success": {
-        esmReady = true;
-        if (cjsReady && typesReady) startProcess();
-        break;
-      }
-    }
-  });
+    });
 
-  watcherCjs.on("message", async (message) => {
-    switch (message) {
-      case "new_compilation": {
-        cjsReady = false;
-        break;
+  watcherCjs &&
+    watcherCjs.on("message", async (message) => {
+      switch (message) {
+        case "new_compilation": {
+          cjsReady = false;
+          break;
+        }
+        case "success": {
+          cjsReady = true;
+          if (esmReady && typesReady) startProcess();
+          break;
+        }
       }
-      case "success": {
-        cjsReady = true;
-        if (esmReady && typesReady) startProcess();
-        break;
-      }
-    }
-  });
+    });
 };
