@@ -58,41 +58,22 @@ exports.build = async function build(
 
   const tscProject = "tsc" + (project ? " -p " + project : "");
 
-  /**
-   * @type {any}
-   */
-  const outputStream = {
-    write() {
-      return true;
-    },
-  };
-
   const cjs = options.skipCjs
     ? null
-    : concurrently(
-        [
-          tscProject +
-            ` --outDir ${outputPath}/cjs -m commonjs --removeComments ${args.join(
-              " "
-            )}`,
-        ],
-        {
-          outputStream,
-        }
-      );
+    : concurrently([
+        tscProject +
+          ` --outDir ${outputPath}/cjs -m commonjs --removeComments ${args.join(
+            " "
+          )}`,
+      ]);
   const esm = options.skipEsm
     ? null
-    : concurrently(
-        [
-          tscProject +
-            ` --outDir ${outputPath}/esm -m es2020 --removeComments ${args.join(
-              " "
-            )}`,
-        ],
-        {
-          outputStream,
-        }
-      );
+    : concurrently([
+        tscProject +
+          ` --outDir ${outputPath}/esm -m es2020 --removeComments ${args.join(
+            " "
+          )}`,
+      ]);
   const types = concurrently([
     tscProject +
       ` --outDir ${outputPath}/types --declaration --emitDeclarationOnly -m es2020 ${args.join(
