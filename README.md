@@ -1,5 +1,7 @@
 # tsc-node-build
 
+SUPERSEDED BY https://github.com/PabloSzx/bob-esbuild
+
 Build **TypeScript Node.js** libraries with ESM support using `tsc`.
 
 ## Features
